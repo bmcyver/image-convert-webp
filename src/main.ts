@@ -63,7 +63,7 @@ function normalizeFileName(name: string): string {
 
 async function toWebP(file: File): Promise<ArrayBuffer> {
 	let decoded: Awaited<ReturnType<typeof HeicDecode>> | null = null;
-	
+
 	if (isHeicFile(file)) {
 		const heicData = new Uint8Array(await file.arrayBuffer());
 		if (!heicDecode) {
@@ -72,8 +72,8 @@ async function toWebP(file: File): Promise<ArrayBuffer> {
 		decoded = await heicDecode({ buffer: heicData });
 	}
 
-	const source = decoded 
-		? new ImageData(decoded.data as unknown as Uint8ClampedArray<ArrayBuffer>, decoded.width, decoded.height) 
+	const source = decoded
+		? new ImageData(decoded.data as unknown as Uint8ClampedArray<ArrayBuffer>, decoded.width, decoded.height)
 		: file;
 	const bitmap = await createImageBitmap(source);
 
@@ -135,7 +135,7 @@ async function handleDropPasteEvent(plugin: Plugin, sourceFile: File, editor: Ed
 
 	const shouldSkipConversion = isAvifFile(sourceFile);
 	const destinationPath = buildAssetPath(activeFile.basename, shouldSkipConversion ? "avif" : "webp");
-	
+
 	const outputData = shouldSkipConversion ? await sourceFile.arrayBuffer() : await toWebP(sourceFile);
 	const createdFile = await plugin.app.vault.createBinary(destinationPath, outputData);
 	editor.replaceSelection(`![[${createdFile.path}]]`);
@@ -148,7 +148,7 @@ async function handleDropPasteEvent(plugin: Plugin, sourceFile: File, editor: Ed
 	const originalSizeKB = (sourceFile.size / 1024).toFixed(2);
 	const createdSizeKB = (createdFile.stat.size / 1024).toFixed(2);
 	const ratio = Math.round(((sourceFile.size - createdFile.stat.size) / sourceFile.size) * 100);
-	
+
 	new Notice(`Converted ${createdFile.basename}\n(${originalSizeKB} KB -> ${createdSizeKB} KB ${ratio}%)`);
 }
 
@@ -158,7 +158,7 @@ async function handleMarkdownMenuEvent(plugin: Plugin, noteFile: TFile): Promise
 		new Notice("Failed to read file metadata.");
 		return;
 	}
-	
+
 	const linkedImageFiles = Object.keys(resolvedLinks)
 		.map(link => plugin.app.vault.getFileByPath(link))
 		.filter((file): file is TFile => file instanceof TFile && SUPPORTED_IMAGE_EXTENSIONS.includes(file.extension.toLowerCase()));
@@ -187,7 +187,7 @@ export default class ImageConvertWebpPlugin extends Plugin {
 		this.registerEvent(
 			this.app.workspace.on("file-menu", (menu, targetFile) => {
 				if (!(targetFile instanceof TFile)) return;
-				
+
 				const ext = targetFile.extension.toLowerCase();
 				if (SUPPORTED_IMAGE_EXTENSIONS.includes(ext)) {
 					menu.addItem((item) => {

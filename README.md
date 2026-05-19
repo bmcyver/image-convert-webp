@@ -7,6 +7,3 @@
 - 이미지 저장 경로: `assets/{{YEAR}}/{{FILE_BASE_NAME}}-{{TIMESTAMP}}.webp`
 - 포함된 라이브러리: [heic-decode](https://github.com/catdad-experiments/heic-decode)
 - 번들 사이즈: ~1.4MB
-
-
-Inspired by [Image Converter](https://github.com/xRyul/obsidian-image-converter)
