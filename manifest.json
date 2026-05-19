@@ -1,0 +1,10 @@
+{
+	"id": "image-convert-webp",
+	"name": "Image Convert WebP",
+	"version": "1.0.0",
+	"minAppVersion": "0.15.0",
+	"description": "Converts images to WebP format.",
+	"author": "bmcyver",
+	"authorUrl": "https://github.com/bmcyver",
+	"isDesktopOnly": false
+}
