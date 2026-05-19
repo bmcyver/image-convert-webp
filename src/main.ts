@@ -48,7 +48,7 @@ async function handleImage(plugin: Plugin, file: File, editor: Editor) {
 	const createdFile = await plugin.app.vault.createBinary(destinationPath, data);
 	editor.replaceSelection(`![[${createdFile.path}]]`);
 
-	return new Notice(`Image converted to WebP and saved as ${createdFile.basename} (${origianlSizeKB} KB -> ${(createdFile.stat.size / 1024).toFixed(2)} KB)`);
+	return new Notice(`${createdFile.basename} (${origianlSizeKB} KB -> ${(createdFile.stat.size / 1024).toFixed(2)} KB ${Math.round(((file.size - createdFile.stat.size) / file.size) * 100)}%)`);
 }
 
 export default class WebPPastePlugin extends Plugin {
