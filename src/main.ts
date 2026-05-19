@@ -1,7 +1,8 @@
-import { type Editor, Notice, Plugin } from "obsidian";
+import { type Editor, Notice, Plugin, TFile } from "obsidian";
 
 const QUALITY = 85;
 const SUPPORTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const SUPPORTED_IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "webp"];
 
 async function toWebP(file: File): Promise<ArrayBuffer> {
 	const bitmap = await createImageBitmap(file);
@@ -35,24 +36,56 @@ function normalizeFileName(name: string): string {
 		.replace(/^_+|_+$/g, '');
 }
 
-async function handleImage(plugin: Plugin, file: File, editor: Editor) {
+async function handleFileMenuClickEvent(plugin: Plugin, targetFile: TFile) {
+	const data = await plugin.app.vault.readBinary(targetFile);
+	const file = new File([data], targetFile.name, { type: targetFile.extension === "jpg" ? "image/jpeg" : `image/${targetFile.extension}` });
+	
+	const webpData = await toWebP(file);
+	await plugin.app.vault.modifyBinary(targetFile, webpData);
+	await plugin.app.fileManager.renameFile(targetFile, `/assets/${new Date().getFullYear()}/${normalizeFileName(targetFile.basename)}-${Date.now()}.webp`);
+
+	const originalSizeKB = (file.size / 1024).toFixed(2);
+	const createdSizeKB = (webpData.byteLength / 1024).toFixed(2);
+
+	new Notice(`${targetFile.basename}\n(${originalSizeKB} KB -> ${createdSizeKB} KB ${Math.round(((file.size - webpData.byteLength) / file.size) * 100)}%)`);
+}
+
+async function handleDropPasteEvent(plugin: Plugin, file: File, editor: Editor) {
 	const activeFile = plugin.app.workspace.getActiveFile();
 	if (!activeFile) {
 		return new Notice("No active file to attach the image to.");
 	}
-
-	const origianlSizeKB = (file.size / 1024).toFixed(2);
 
 	const destinationPath = `/assets/${new Date().getFullYear()}/${normalizeFileName(activeFile.basename)}-${Date.now()}.webp`;
 	const data = await toWebP(file);
 	const createdFile = await plugin.app.vault.createBinary(destinationPath, data);
 	editor.replaceSelection(`![[${createdFile.path}]]`);
 
-	return new Notice(`${createdFile.basename} (${origianlSizeKB} KB -> ${(createdFile.stat.size / 1024).toFixed(2)} KB ${Math.round(((file.size - createdFile.stat.size) / file.size) * 100)}%)`);
+	const origianlSizeKB = (file.size / 1024).toFixed(2);
+	const createdSizeKB = (createdFile.stat.size / 1024).toFixed(2);
+	return new Notice(`${createdFile.basename}\n(${origianlSizeKB} KB -> ${createdSizeKB} KB ${Math.round(((file.size - createdFile.stat.size) / file.size) * 100)}%)`);
 }
+
+
 
 export default class WebPPastePlugin extends Plugin {
 	async onload() {
+		this.registerEvent(
+			this.app.workspace.on("file-menu", (menu, targetFile) => {
+				if (!(targetFile instanceof TFile) || !SUPPORTED_IMAGE_EXTENSIONS.includes(targetFile.extension.toLowerCase())) {
+					return;
+				}
+				menu.addItem((item) => {
+					item.setTitle("Convert to WebP")
+						.setIcon("image-down")
+						.onClick(async () => {
+							return handleFileMenuClickEvent(this, targetFile);
+						});
+				});
+
+			}),
+		);
+
 		this.registerEvent(
 			this.app.workspace.on("editor-paste", async (evt: ClipboardEvent, editor: Editor) => {
 				if (!evt.clipboardData?.items || evt.defaultPrevented) return;
@@ -72,7 +105,7 @@ export default class WebPPastePlugin extends Plugin {
 				}
 
 				evt.preventDefault();
-				return handleImage(this, file, editor);
+				return handleDropPasteEvent(this, file, editor);
 			}),
 		);
 
@@ -88,7 +121,7 @@ export default class WebPPastePlugin extends Plugin {
 				}
 
 				evt.preventDefault();
-				return handleImage(this, file, editor);
+				return handleDropPasteEvent(this, file, editor);
 			}),
 		)
 	}
