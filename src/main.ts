@@ -40,7 +40,7 @@ async function handleFileMenuClickEvent(plugin: Plugin, targetFile: TFile) {
 	if (/.+-\d+\.webp$/i.test(targetFile.name)) {
 		return new Notice("This file seems to be already converted.");
 	}
-	
+
 	const data = await plugin.app.vault.readBinary(targetFile);
 	const file = new File([data], targetFile.name, { type: targetFile.extension === "jpg" ? "image/jpeg" : `image/${targetFile.extension}` });
 	
@@ -51,7 +51,7 @@ async function handleFileMenuClickEvent(plugin: Plugin, targetFile: TFile) {
 	const originalSizeKB = (file.size / 1024).toFixed(2);
 	const createdSizeKB = (webpData.byteLength / 1024).toFixed(2);
 
-	new Notice(`${targetFile.basename}\n(${originalSizeKB} KB -> ${createdSizeKB} KB ${Math.round(((file.size - webpData.byteLength) / file.size) * 100)}%)`);
+	return new Notice(`${targetFile.basename}\n(${originalSizeKB} KB -> ${createdSizeKB} KB ${Math.round(((file.size - webpData.byteLength) / file.size) * 100)}%)`);
 }
 
 async function handleDropPasteEvent(plugin: Plugin, file: File, editor: Editor) {
