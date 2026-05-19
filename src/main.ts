@@ -37,6 +37,10 @@ function normalizeFileName(name: string): string {
 }
 
 async function handleFileMenuClickEvent(plugin: Plugin, targetFile: TFile) {
+	if (/.+-\d+\.webp$/i.test(targetFile.name)) {
+		return new Notice("This file seems to be already converted.");
+	}
+	
 	const data = await plugin.app.vault.readBinary(targetFile);
 	const file = new File([data], targetFile.name, { type: targetFile.extension === "jpg" ? "image/jpeg" : `image/${targetFile.extension}` });
 	
